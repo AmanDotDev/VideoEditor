@@ -48,20 +48,20 @@ export const Editor = observer(() => {
     });
   }, []);
   return (
-    <div className="grid grid-rows-[500px_1fr_20px] grid-cols-[72px_300px_1fr_250px] h-[100svh]">
+    <div className="grid grid-rows-[550px_1fr_20px] grid-cols-[50px_250px_1fr_230px] h-[100vh] bg-zinc-900">
       <div className="tile row-span-2 flex flex-col">
         <Menu />
       </div>
-      <div className="row-span-2 flex flex-col overflow-scroll">
+      <div className="row-span-2 flex flex-col h-full overflow-y-scroll justify-center">
         <Resources />
       </div>
       <div id="grid-canvas-container" className="col-start-3 bg-zinc-600 flex justify-center items-center">
         <canvas id="canvas" className="p-4 h-[500px] w-[800px] row" />
       </div>
-      <div className="col-start-4 row-start-1">
+      <div className="col-start-4 row-start-1 overflow-x-hidden">
         <ElementsPanel />
       </div>
-      <div className="col-start-3 row-start-2 col-span-2 bg-zinc-800 relative px-[10px] py-[4px] overflow-scroll">
+      <div className="col-start-3 row-start-2 col-span-2 bg-zinc-800 relative px-[10px] py-[4px]">
         <TimeLine />
       </div>
     </div>

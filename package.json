@@ -16,6 +16,7 @@
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.6",
     "@ffmpeg/util": "^0.12.1",
+    "@heroicons/react": "^2.1.5",
     "@types/fabric": "^5.3.3",
     "@types/node": "20.4.0",
     "@types/react": "18.2.14",

@@ -8,7 +8,7 @@ export type UploadButtonProps = {
 };
 export const UploadButton = (props: UploadButtonProps) => {
   return (
-    <div className="p-8">
+    <div>
       <div className="text-md px-[16px] mb-10 pt-[16px] pb-[8px] font-semibold">
         {props.title}
       </div>
