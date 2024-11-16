@@ -75,14 +75,14 @@ export class Store {
     }
   }
 
-  updateEffect(id: string, effect: Effect) {
-    const index = this.editorElements.findIndex((element) => element.id === id);
-    const element = this.editorElements[index];
-    if (isEditorVideoElement(element) || isEditorImageElement(element)) {
-      element.properties.effect = effect;
-    }
-    this.refreshElements();
-  }
+  // updateEffect(id: string, effect: Effect) {
+  //   const index = this.editorElements.findIndex((element) => element.id === id);
+  //   const element = this.editorElements[index];
+  //   if (isEditorVideoElement(element) || isEditorImageElement(element)) {
+  //     element.properties.effect = effect;
+  //   }
+  //   this.refreshElements();
+  // }
 
   setVideos(videos: string[]) {
     this.videos = videos;
@@ -96,191 +96,6 @@ export class Store {
   }
   addImageResource(image: string) {
     this.images = [...this.images, image];
-  }
-
-  addAnimation(animation: Animation) {
-    this.animations = [...this.animations, animation];
-    this.refreshAnimations();
-  }
-  updateAnimation(id: string, animation: Animation) {
-    const index = this.animations.findIndex((a) => a.id === id);
-    this.animations[index] = animation;
-    this.refreshAnimations();
-  }
-
-  refreshAnimations() {
-    anime.remove(this.animationTimeLine);
-    this.animationTimeLine = anime.timeline({
-      duration: this.maxTime,
-      autoplay: false,
-    });
-    for (let i = 0; i < this.animations.length; i++) {
-      const animation = this.animations[i];
-      const editorElement = this.editorElements.find((element) => element.id === animation.targetId);
-      const fabricObject = editorElement?.fabricObject;
-      if (!editorElement || !fabricObject) {
-        continue;
-      }
-      fabricObject.clipPath = undefined;
-      switch (animation.type) {
-        case "fadeIn": {
-          this.animationTimeLine.add({
-            opacity: [0, 1],
-            duration: animation.duration,
-            targets: fabricObject,
-            easing: 'linear',
-          }, editorElement.timeFrame.start);
-          break;
-        }
-        case "fadeOut": {
-          this.animationTimeLine.add({
-            opacity: [1, 0],
-            duration: animation.duration,
-            targets: fabricObject,
-            easing: 'linear',
-          }, editorElement.timeFrame.end - animation.duration);
-          break
-        }
-        case "slideIn": {
-          const direction = animation.properties.direction;
-          const targetPosition = {
-            left: editorElement.placement.x,
-            top: editorElement.placement.y,
-          }
-          const startPosition = {
-            left: (direction === "left" ? - editorElement.placement.width : direction === "right" ? this.canvas?.width : editorElement.placement.x),
-            top: (direction === "top" ? - editorElement.placement.height : direction === "bottom" ? this.canvas?.height : editorElement.placement.y),
-          }
-          if (animation.properties.useClipPath) {
-            const clipRectangle = FabricUitls.getClipMaskRect(editorElement, 50);
-            fabricObject.set('clipPath', clipRectangle)
-          }
-          if (editorElement.type === "text" && animation.properties.textType === "character") {
-            this.canvas?.remove(...editorElement.properties.splittedTexts)
-            // @ts-ignore
-            editorElement.properties.splittedTexts = getTextObjectsPartitionedByCharacters(editorElement.fabricObject, editorElement);
-            editorElement.properties.splittedTexts.forEach((textObject) => {
-              this.canvas!.add(textObject);
-            })
-            const duration = animation.duration / 2;
-            const delay = duration / editorElement.properties.splittedTexts.length;
-            for (let i = 0; i < editorElement.properties.splittedTexts.length; i++) {
-              const splittedText = editorElement.properties.splittedTexts[i];
-              const offset = {
-                left: splittedText.left! - editorElement.placement.x,
-                top: splittedText.top! - editorElement.placement.y
-              }
-              this.animationTimeLine.add({
-                left: [startPosition.left! + offset.left, targetPosition.left + offset.left],
-                top: [startPosition.top! + offset.top, targetPosition.top + offset.top],
-                delay: i * delay,
-                duration: duration,
-                targets: splittedText,
-              }, editorElement.timeFrame.start);
-            }
-            this.animationTimeLine.add({
-              opacity: [1, 0],
-              duration: 1,
-              targets: fabricObject,
-              easing: 'linear',
-            }, editorElement.timeFrame.start);
-            this.animationTimeLine.add({
-              opacity: [0, 1],
-              duration: 1,
-              targets: fabricObject,
-              easing: 'linear',
-            }, editorElement.timeFrame.start + animation.duration);
-
-            this.animationTimeLine.add({
-              opacity: [0, 1],
-              duration: 1,
-              targets: editorElement.properties.splittedTexts,
-              easing: 'linear',
-            }, editorElement.timeFrame.start);
-            this.animationTimeLine.add({
-              opacity: [1, 0],
-              duration: 1,
-              targets: editorElement.properties.splittedTexts,
-              easing: 'linear',
-            }, editorElement.timeFrame.start + animation.duration);
-          }
-          this.animationTimeLine.add({
-            left: [startPosition.left, targetPosition.left],
-            top: [startPosition.top, targetPosition.top],
-            duration: animation.duration,
-            targets: fabricObject,
-            easing: 'linear',
-          }, editorElement.timeFrame.start);
-          break
-        }
-        case "slideOut": {
-          const direction = animation.properties.direction;
-          const startPosition = {
-            left: editorElement.placement.x,
-            top: editorElement.placement.y,
-          }
-          const targetPosition = {
-            left: (direction === "left" ? - editorElement.placement.width : direction === "right" ? this.canvas?.width : editorElement.placement.x),
-            top: (direction === "top" ? -100 - editorElement.placement.height : direction === "bottom" ? this.canvas?.height : editorElement.placement.y),
-          }
-          if (animation.properties.useClipPath) {
-            const clipRectangle = FabricUitls.getClipMaskRect(editorElement, 50);
-            fabricObject.set('clipPath', clipRectangle)
-          }
-          this.animationTimeLine.add({
-            left: [startPosition.left, targetPosition.left],
-            top: [startPosition.top, targetPosition.top],
-            duration: animation.duration,
-            targets: fabricObject,
-            easing: 'linear',
-          }, editorElement.timeFrame.end - animation.duration);
-          break
-        }
-        case "breathe": {
-          const itsSlideInAnimation = this.animations.find((a) => a.targetId === animation.targetId && (a.type === "slideIn"));
-          const itsSlideOutAnimation = this.animations.find((a) => a.targetId === animation.targetId && (a.type === "slideOut"));
-          const timeEndOfSlideIn = itsSlideInAnimation ? editorElement.timeFrame.start + itsSlideInAnimation.duration : editorElement.timeFrame.start;
-          const timeStartOfSlideOut = itsSlideOutAnimation ? editorElement.timeFrame.end - itsSlideOutAnimation.duration : editorElement.timeFrame.end;
-          if (timeEndOfSlideIn > timeStartOfSlideOut) {
-            continue;
-          }
-          const duration = timeStartOfSlideOut - timeEndOfSlideIn;
-          const easeFactor = 4;
-          const suitableTimeForHeartbeat = 1000 * 60 / 72 * easeFactor
-          const upScale = 1.05;
-          const currentScaleX = fabricObject.scaleX ?? 1;
-          const currentScaleY = fabricObject.scaleY ?? 1;
-          const finalScaleX = currentScaleX * upScale;
-          const finalScaleY = currentScaleY * upScale;
-          const totalHeartbeats = Math.floor(duration / suitableTimeForHeartbeat);
-          if (totalHeartbeats < 1) {
-            continue;
-          }
-          const keyframes = [];
-          for (let i = 0; i < totalHeartbeats; i++) {
-            keyframes.push({ scaleX: finalScaleX, scaleY: finalScaleY });
-            keyframes.push({ scaleX: currentScaleX, scaleY: currentScaleY });
-          }
-
-          this.animationTimeLine.add({
-            duration: duration,
-            targets: fabricObject,
-            keyframes,
-            easing: 'linear',
-            loop: true
-          }, timeEndOfSlideIn);
-
-          break
-        }
-      }
-    }
-  }
-
-  removeAnimation(id: string) {
-    this.animations = this.animations.filter(
-      (animation) => animation.id !== id
-    );
-    this.refreshAnimations();
   }
 
   setSelectedElement(selectedElement: EditorElement | null) {
@@ -326,7 +141,7 @@ export class Store {
     this.updateVideoElements();
     this.updateAudioElements();
     this.updateEditorElement(newEditorElement);
-    this.refreshAnimations();
+    // this.refreshAnimations();
   }
 
 
@@ -896,7 +711,7 @@ export class Store {
     if (selectedEditorElement && selectedEditorElement.fabricObject) {
       canvas.setActiveObject(selectedEditorElement.fabricObject);
     }
-    this.refreshAnimations();
+    // this.refreshAnimations();
     this.updateTimeTo(this.currentTimeInMs);
     store.canvas.renderAll();
   }
@@ -922,30 +737,30 @@ export function isEditorImageElement(
 }
 
 
-function getTextObjectsPartitionedByCharacters(textObject: fabric.Text, element: TextEditorElement): fabric.Text[] {
-  let copyCharsObjects: fabric.Text[] = [];
-  // replace all line endings with blank
-  const characters = (textObject.text ?? "").split('').filter((m) => m !== '\n');
-  const charObjects = textObject.__charBounds;
-  if (!charObjects) return [];
-  const charObjectFixed = charObjects.map((m, index) => m.slice(0, m.length - 1).map(m => ({ m, index }))).flat();
-  const lineHeight = textObject.getHeightOfLine(0);
-  for (let i = 0; i < characters.length; i++) {
-    if (!charObjectFixed[i]) continue;
-    const { m: charObject, index: lineIndex } = charObjectFixed[i];
-    const char = characters[i];
-    const scaleX = textObject.scaleX ?? 1;
-    const scaleY = textObject.scaleY ?? 1;
-    const charTextObject = new fabric.Text(char, {
-      left: charObject.left * scaleX + (element.placement.x),
-      scaleX: scaleX,
-      scaleY: scaleY,
-      top: lineIndex * lineHeight * scaleY + (element.placement.y),
-      fontSize: textObject.fontSize,
-      fontWeight: textObject.fontWeight,
-      fill: '#fff',
-    });
-    copyCharsObjects.push(charTextObject);
-  }
-  return copyCharsObjects;
-}
+// function getTextObjectsPartitionedByCharacters(textObject: fabric.Text, element: TextEditorElement): fabric.Text[] {
+//   let copyCharsObjects: fabric.Text[] = [];
+//   // replace all line endings with blank
+//   const characters = (textObject.text ?? "").split('').filter((m) => m !== '\n');
+//   const charObjects = textObject.__charBounds;
+//   if (!charObjects) return [];
+//   const charObjectFixed = charObjects.map((m, index) => m.slice(0, m.length - 1).map(m => ({ m, index }))).flat();
+//   const lineHeight = textObject.getHeightOfLine(0);
+//   for (let i = 0; i < characters.length; i++) {
+//     if (!charObjectFixed[i]) continue;
+//     const { m: charObject, index: lineIndex } = charObjectFixed[i];
+//     const char = characters[i];
+//     const scaleX = textObject.scaleX ?? 1;
+//     const scaleY = textObject.scaleY ?? 1;
+//     const charTextObject = new fabric.Text(char, {
+//       left: charObject.left * scaleX + (element.placement.x),
+//       scaleX: scaleX,
+//       scaleY: scaleY,
+//       top: lineIndex * lineHeight * scaleY + (element.placement.y),
+//       fontSize: textObject.fontSize,
+//       fontWeight: textObject.fontWeight,
+//       fill: '#fff',
+//     });
+//     copyCharsObjects.push(charTextObject);
+//   }
+//   return copyCharsObjects;
+// }
